@@ -21,8 +21,9 @@
 
 #define INCL_DOSERRORS
 #include <os2.h>
+#include "ring0types.h"
 
-#include "dhcalls.h"
+#include "devhelp.h"
 #include "fsd.h"
 #include "fsh.h"
 
@@ -39,7 +40,7 @@
 PFN Device_Help;
 
 /* Exported (see stubfsd.def) variables. */
-char pascal FS_NAME[] = "STUBFSD\000\000\000\000";
+char pascal FS_NAME[] = "AEFS\000\000\000\000\000\000\000";
 ULONG pascal FS_ATTRIBUTE = FSA_REMOTE;
 
 /* The pid of the daemon process.  0 = no daemon is currently

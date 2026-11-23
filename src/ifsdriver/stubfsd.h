@@ -21,6 +21,7 @@
 #ifndef _STUBFSD_H
 #define _STUBFSD_H
 
+#include "ring0types.h"
 #include "fsd.h"
 
 

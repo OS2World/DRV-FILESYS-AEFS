@@ -17,6 +17,7 @@ set INCS=-Isrc/corefs -Isrc/ciphers -Isrc/misc -Isrc/ifsdriver -Isrc/system -Isr
 set DEFS=-DSYSTEM_os2 -DHAVE_CONFIG_H
 set CF=-Zomf -Zmt -O2 -Wall -Wno-parentheses %INCS% %DEFS%
 if not exist bin md bin
+if exist bin\*.exe del bin\*.exe < nul
 if exist bin\obj del bin\obj\*.obj < nul
 if not exist bin\obj md bin\obj
 echo ==== compile > compile.log
@@ -57,9 +58,9 @@ gcc %CF% -c -o bin\obj\mkaefs.obj src/utils/mkaefs.c >> compile.log 2>&1
 gcc %CF% -c -o bin\obj\aefsck.obj src/utils/aefsck.c >> compile.log 2>&1
 gcc %CF% -c -o bin\obj\aefsdump.obj src/utils/aefsdump.c >> compile.log 2>&1
 gcc %CF% -c -o bin\obj\aefsutil.obj src/utils/aefsutil.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\aefsparm.obj ifssrc/utils/aefsparm.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\mntaefs.obj ifssrc/utils/mntaefs.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\umntaefs.obj ifssrc/utils/umntaefs.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\aefsparm.obj src/ifsutils/aefsparm.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\mntaefs.obj src/ifsutils/mntaefs.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\umntaefs.obj src/ifsutils/umntaefs.c >> compile.log 2>&1
 echo ==== link >> compile.log
 set LIBS=bin\obj\getopt.obj bin\obj\getopt1.obj bin\obj\missing.obj bin\obj\logging.obj bin\obj\os2.obj bin\obj\cipher.obj bin\obj\ciphertable.obj bin\obj\identity.obj bin\obj\rijndael.obj bin\obj\sha.obj bin\obj\twofish.obj bin\obj\basefile.obj bin\obj\comparators.obj bin\obj\coreutils.obj bin\obj\directory.obj bin\obj\ea.obj bin\obj\infosector.obj bin\obj\sector.obj bin\obj\storage.obj bin\obj\superblock.obj bin\obj\symlink.obj
 gcc -Zomf -Zmt -o bin\aefsdmn.exe bin\obj\aefsdmn.obj bin\obj\attach.obj bin\obj\find.obj bin\obj\misc.obj bin\obj\dir.obj bin\obj\openclose.obj bin\obj\fileio.obj bin\obj\fileinfo.obj bin\obj\fileop.obj bin\obj\d_ea.obj bin\obj\utils.obj %LIBS% -lsyslog >> compile.log 2>&1

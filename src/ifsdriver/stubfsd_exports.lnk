@@ -1,0 +1,3 @@
+# FS_* functions are exported by _export in stubfsd.c; only the data needs listing here
+export FS_ATTRIBUTE
+export FS_NAME
