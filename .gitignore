@@ -27,3 +27,8 @@
 /utils/aefsdump
 /utils/aefsutil
 /utils/mkaefs
+bin/
+*.log
+*.obj
+*.map
+*.err
