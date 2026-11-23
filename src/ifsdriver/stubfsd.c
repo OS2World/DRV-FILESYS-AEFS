@@ -29,6 +29,7 @@
 
 #define RING0
 #include "stubfsd.h"
+#include "bootmsg.h"
 
 #undef FS_ATTACH
 
@@ -321,28 +322,37 @@ FS_INIT(
 
    pidDaemon = 0;
 
-   /* Parse the IFS name. */
+   /* Parse the IFS name (the first word, unless it is a switch). */
    p = pszParm;
-   while ((*p == ' ') || (*p == '\t')) p++;
-   if (*p) {
+   while ((*p == ' ') || (*p == '	')) p++;
+   if (*p && *p != '/') {
       for (i = 0;
-           (i < sizeof(FS_NAME)) &&
+           (i < sizeof(FS_NAME) - 1) &&
               (*p) &&
               (*p != ' ') &&
-              (*p != '\t');
+              (*p != '	');
            i++)
          FS_NAME[i] = *p++;
       FS_NAME[i] = 0;
+      /* A name that is too long is cut; skip what is left of it. */
+      while (*p && *p != ' ' && *p != '	') p++;
    }
-   
+
+   /* Switches (/V /Q /W /AA) and the verbose banner. */
+   rc = BootInit(p);
+   if (rc) return BootDone(rc);
+
    /* Allocate enough GDT selectors. */
    rc = DevHelp_AllocGDTSelector(aselMapping, 2);
-   if (rc) return rc;
+   if (rc) {
+      BootFail("Could not allocate the selectors for the exchange buffers.");
+      return BootDone(rc);
+   }
 
    pRequest = MAKEP(aselMapping[0], 0);
    pFSData = MAKEP(aselMapping[1], 0);
 
-   return NO_ERROR;
+   return BootDone(NO_ERROR);
 }
 
 

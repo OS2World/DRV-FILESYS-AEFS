@@ -10,7 +10,7 @@
 /* little endian: WORDS_BIGENDIAN is not defined */
 
 /* Version string (the upstream makefile built it from the git revision count). */
-#define AEFS_VERSION "AEFS 0.4pre262"
+#define AEFS_VERSION "AEFS 0.4a1"
 
 /* Maximum number of open files of the daemon. */
 #define OPEN_FILES_LIMIT 512

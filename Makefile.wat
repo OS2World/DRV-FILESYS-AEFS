@@ -11,7 +11,7 @@ LINK = $(WATCOM)\binp\wlink.exe
 
 SRC_DIR = src\ifsdriver
 BIN_DIR = bin
-OBJ = $(BIN_DIR)\stubfsd.obj $(BIN_DIR)\dhwrap.obj
+OBJ = $(BIN_DIR)\stubfsd.obj $(BIN_DIR)\bootmsg.obj $(BIN_DIR)\dhwrap.obj
 IFS = $(BIN_DIR)\aefs.ifs
 EXPORTS = $(SRC_DIR)\stubfsd_exports.lnk
 
@@ -29,9 +29,11 @@ option protmode
 option stack=0
 option quiet
 option map=$(BIN_DIR)\aefs.map
-option description '@#OS2World:0.1#@AEFS stub IFS (Open Watcom)'
+option description '@#OS2World:0.4a1#@AEFS stub IFS (Open Watcom)'
 library os2
-import DOSPUTMESSAGE DOSCALLS.383
+import DOSREAD DOSCALLS.137
+import DOSWRITE DOSCALLS.138
+import DOSBEEP DOSCALLS.50
 import FSH_INTERR FSHELPER.5
 import FSH_SEMREQUEST FSHELPER.6
 import FSH_SEMCLEAR FSHELPER.7
@@ -41,15 +43,20 @@ import FSH_SEMSET FSHELPER.24
 import FSH_SEMWAIT FSHELPER.26
 import FSH_QSYSINFO FSHELPER.44
 file $(BIN_DIR)\stubfsd.obj
+file $(BIN_DIR)\bootmsg.obj
 file $(BIN_DIR)\dhwrap.obj
 segment type CODE PRELOAD EXECUTEREAD NONSHARED
 segment type DATA PRELOAD NONSHARED
 @$(EXPORTS)
 <<
 
-$(BIN_DIR)\stubfsd.obj: $(SRC_DIR)\stubfsd.c $(SRC_DIR)\stubfsd.h $(SRC_DIR)\fsd.h $(SRC_DIR)\fsh.h $(SRC_DIR)\devhelp.h
+$(BIN_DIR)\stubfsd.obj: $(SRC_DIR)\stubfsd.c $(SRC_DIR)\stubfsd.h $(SRC_DIR)\fsd.h $(SRC_DIR)\fsh.h $(SRC_DIR)\devhelp.h $(SRC_DIR)\bootmsg.h
 	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
 	$(CC) $(CFLAGS) -fo=$@ $(SRC_DIR)\stubfsd.c
+
+$(BIN_DIR)\bootmsg.obj: $(SRC_DIR)\bootmsg.c $(SRC_DIR)\bootmsg.h $(SRC_DIR)\version.h
+	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
+	$(CC) $(CFLAGS) -fo=$@ $(SRC_DIR)\bootmsg.c
 
 $(BIN_DIR)\dhwrap.obj: $(SRC_DIR)\dhwrap.asm
 	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
