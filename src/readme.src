@@ -133,8 +133,9 @@
 
 þh2 Requirements
 
-  This software requires the EMX runtime.  It can be downloaded from:
-  þtt{ftp://ftp.leo.org/pub/comp/os/os2/leo/gnu/emx+gcc/emxrt.zip}.
+  This software runs on ArcaOS and OS/2 Warp 4 with the kLIBC runtime
+  (þtt{LIBC063.DLL} or newer; it is part of ArcaOS).  The older EMX
+  runtime is no longer needed.
 
 
 þh2 Installation
@@ -145,7 +146,7 @@
   þtt{CONFIG.SYS}:
 
 þexample
-  IFS=<bin-path>\stubfsd.ifs AEFS
+  IFS=<bin-path>\aefs.ifs AEFS
   RUN=<bin-path>\aefsdmn.exe
 þendexample
 
@@ -155,6 +156,13 @@
   second line and does the real work.  You may also want to add
   þsy{<bin-path>} to the PATH environment variable, but that's merely
   a convenience.  After making these changes, reboot the system.
+
+  The driver is quiet when it loads, except for errors.  After the
+  name (þtt{AEFS}) the þtt{IFS} line accepts the usual switches:
+  þtt{/V} prints the version, þtt{/Q} prints no messages at all,
+  þtt{/W} waits for a key press after the messages and þtt{/AA}
+  beeps when the driver has loaded.  Every message starts with
+  þtt{AEFS: }.
 
 
 þh2 Overview
@@ -494,8 +502,7 @@
   up access to the encrypted files AEFS keeps the most recently used
   ones open.  The default is 16.  This number should not be made too
   high; otherwise the daemon might run into the open file limit of the
-  C runtime library (use þsy{emxbind -a aefsdmn.exe -h<limit>} to change
-  this).
+  C runtime library.
 
 þitem þsy{--files <n>}
 
@@ -657,22 +664,16 @@
 
 þh1 Building AEFS
 
-  The makefiles require GNU make.
+  The stub driver (þtt{aefs.ifs}) is built with Open Watcom 2 by
+  þtt{compile_wat.cmd}; the daemon and the programs are built with
+  GCC 9 for OS/2 (kLIBC) by þtt{compile_gcc.cmd}.  Both scripts are run
+  from the top directory of the sources and write their results to the
+  þtt{bin} directory.  The kernel interface headers of the stub are
+  written from public documentation and are in þtt{src\ifsdriver}.  The NFS
+  server and the FUSE server of the original package are not built.
 
-  To build the FSD (þtt{stubfsd.ifs}) you need Microsoft C 6.00.  This
-  compiler can be downloaded from the IBM Developer Connection Device
-  Driver Kit for OS/2 site at þtt{http://service.boulder.ibm.com/ddk}.
-  You also need the FSD helper library and header file, which is
-  included in the FSD toolkit:
-  þtt{ftp://ftp.leo.org/pub/comp/os/os2/leo/devtools/doc/ifsinf.zip}.
-
-  To build the daemon and the support programs you need gcc or pgcc,
-  available from various locations.
-
-  To regenerate the RPC code for the NFS server, you need a
-  þtt{rpcgen} that supports the þtt{-C} flag to generate ANSI C header
-  files.  I used the one from FreeBSD, which compiles trivially under
-  OS/2.
+  The manual (this text) is made from þtt{src\readme.src} with the
+  þtt{emxdoc} program in þtt{src\emxdoc}.
 
 
 þh1 Compiling and using the NFS server

@@ -1,0 +1,606 @@
+<HTML><HEAD>
+<TITLE>AEFS Read Me</TITLE>
+</HEAD><BODY>
+<A NAME="1"></A>
+<H1>1 Introduction</H1>
+
+<P>AEFS is a cryptographic file system for OS/2 and Unix-like
+operating systems.&nbsp;&nbsp;It allows transparent access to
+encrypted files stored on any file system -- it's not necessary
+to dedicate disk partitions.&nbsp;&nbsp;Several block ciphers
+are currently supported (Rijndael and Twofish).&nbsp;&nbsp;Extended
+attributes are supported under OS/2.
+<A NAME="2"></A>
+<H2>1.1 Changes in version 0.2.1</H2>
+
+<P>This is a bugfix release.&nbsp;&nbsp;The following bugs were
+fixed:
+<UL>
+
+<LI>
+A bug was fixed in the treatment of paths relative to the current
+directory (except the root directory) of the form <TT>X/filename</TT>,
+where <TT>X</TT> is a one-character file name.&nbsp;&nbsp;Such
+paths would incorrectly refer to the current directory.&nbsp;&nbsp;For
+example, <TT>touch X/bla</TT> would create a file called <TT>bla</TT>
+in the current directory instead of in <TT>X</TT>.&nbsp;&nbsp;Thanks
+go to Max Alekseyev for discovering this bug.
+<LI>
+Various fixes in the NFS server, which now seems to be reasonably
+stable.
+<LI>
+AEFS now works properly on systems that don't support growing
+truncates (e.g., Linux on some file systems).&nbsp;&nbsp;Because
+of this the csAllocated field has been removed from the on-disk
+file info structure.&nbsp;&nbsp;The csAllocated field wasn't
+actually used by the file system anyway, but you may receive
+minor warnings (complaining about an inconsistency between the
+csAllocated field and the actual allocation of a file) when you
+run an older version of <TT>aefsck</TT> against a file system
+created or modified by the current version of AEFS.
+</UL>
+<P>Furthermore, there is a new utility <TT>aefsutil</TT> that
+allows access to unmounted file systems (i.e., list directories,
+extract files, etc.).
+<A NAME="3"></A>
+<H2>1.2 Changes in version 0.2</H2>
+
+<P>There are a few improvements:
+<UL>
+
+<LI>
+AEFS now works under other (read: Unix-like) operating systems
+as well.&nbsp;&nbsp;I've implemented an NFS server frontend to
+AEFS, so in principle any system that can mount NFS file systems
+can mount an AEFS file system.&nbsp;&nbsp;It has been tested
+on Linux and IRIX, and it at least compiles on FreeBSD and Solaris.
+<LI>
+Autoconf configuration.
+<LI>
+Utilities like <TT>aefsck</TT> should produce better error messages
+in case of a low-level (corefs) error.
+<LI>
+Rijndael is the default cipher (instead of Twofish) now that
+it has been selected as the AES.
+<LI>
+Syslog support.&nbsp;&nbsp;The OS/2 daemon now logs to syslog
+instead of to a file.
+<LI>
+Performance improvements in the OS/2 daemon with regard to directory
+handling.
+<LI>
+Rijndael and Twofish now work on big-endian systems.
+<LI>
+Storage files are now locked when they are being accessed.&nbsp;&nbsp;Notably,
+the superblock is locked for the entire time that the file system
+is being used.&nbsp;&nbsp;This prevents e.g.&nbsp;&nbsp;<TT>aefsck</TT>
+from messing with a file system that is currently mounted.
+</UL>
+<P>I fixed the following bugs:
+<UL>
+
+<LI>
+The FSD didn't correctly deal with interrupted client processes.
+ If a process waiting for the FSD to complete a request would
+receive a signal (e.g.&nbsp;&nbsp;break or kill), then the daemon
+might corrupt the next request or even crash.
+<LI>
+Seeks relative to the end of the file didn't work properly because
+the FS_WRITE operation forgot to update the size field of the
+kernel's sffsi data structure.&nbsp;&nbsp;This caused e.g.&nbsp;&nbsp;gnutar
+to fail.
+<LI>
+Setting file info on an open file (DosSetFileInfo) would reset
+the file position to 0.
+</UL>
+<A NAME="4"></A>
+<H2>1.3 Requirements</H2>
+
+<P>This software requires the EMX runtime.&nbsp;&nbsp;It can
+be downloaded from: <TT>ftp://ftp.leo.org/pub/comp/os/os2/leo/gnu/emx+gcc/emxrt.zip</TT>.
+<A NAME="5"></A>
+<H2>1.4 Installation</H2>
+
+<P>Unzip the zip-file to any place on your hard disk.&nbsp;&nbsp;You
+only need the files in the <TT>bin</TT> subdirectory; all other
+files are source code and may be deleted.&nbsp;&nbsp;Then add
+the following lines to <TT>CONFIG.SYS</TT>:
+<BLOCKQUOTE>
+<PRE>
+&nbsp;&nbsp;IFS=&lt;bin-path&gt;\stubfsd.ifs AEFS
+&nbsp;&nbsp;RUN=&lt;bin-path&gt;\aefsdmn.exe
+</PRE>
+</BLOCKQUOTE>
+<P>where <I>bin-path</I> is the path of the <TT>bin</TT> subdirectory.
+ The first line loads the FSD (file system driver), which is
+really a stub that passes requests to the daemon, which is started
+in the second line and does the real work.&nbsp;&nbsp;You may
+also want to add <I>bin-path</I> to the PATH environment variable,
+but that's merely a convenience.&nbsp;&nbsp;After making these
+changes, reboot the system.
+<A NAME="6"></A>
+<H2>1.5 Overview</H2>
+
+<P>To create an AEFS volume using the default block cipher algorithm
+(Rijndael, with a 128-bit key size), type
+<BLOCKQUOTE>
+<PRE>
+&nbsp;&nbsp;mkaefs &lt;path&gt;
+</PRE>
+</BLOCKQUOTE>
+<P>which will create a volume in <I>path</I> (that is, the ciphertext
+will be stored in <I>path</I>).&nbsp;&nbsp;It will ask you to
+(twice) enter the encryption key to be used for this volume.
+ Don't forget the key!&nbsp;&nbsp;The key should be sufficiently
+hard to guess and may be of any length.&nbsp;&nbsp;(The key you
+enter is not actually the encryption key: it is hashed using
+SHA-1 into a key with the length expected by the block cipher).
+<P>For example,
+<BLOCKQUOTE>
+<PRE>
+&nbsp;&nbsp;mkaefs c:\crypto
+</PRE>
+</BLOCKQUOTE>
+<P>will make a volume in <TT>c:\crypto</TT>.
+<P>To access the volume, you must attach (`mount') it to a drive
+letter.&nbsp;&nbsp;This can be done by typing
+<BLOCKQUOTE>
+<PRE>
+&nbsp;&nbsp;mntaefs &lt;drive-letter&gt;: &lt;path&gt;
+</PRE>
+</BLOCKQUOTE>
+<P>The program will then ask you to enter the encryption key.
+<P>For example,
+<BLOCKQUOTE>
+<PRE>
+&nbsp;&nbsp;mntaefs x: c:\crypto
+</PRE>
+</BLOCKQUOTE>
+<P>will attach the volume created in the previous example to
+the drive letter X.&nbsp;&nbsp;You can now access the encrypted
+data in <TT>c:\crypto</TT> through drive X.&nbsp;&nbsp;Any data
+you write to or read from drive X will be encrypted and decrypted
+transparently by AEFS.
+<P>When you are done using the encrypted volume, you can type
+<BLOCKQUOTE>
+<PRE>
+&nbsp;&nbsp;umntaefs &lt;drive-letter&gt;:
+</PRE>
+</BLOCKQUOTE>
+<P>to detach it.
+<A NAME="7"></A>
+<H1>2 Command reference</H1>
+
+<P>All programs use the GNU getopt syntax.&nbsp;&nbsp;They all
+support the following options:
+<DL COMPACT>
+
+<DT><TT>--help</TT><DD>Print help and exit.
+<DT><TT>--version</TT><DD>Print version information and exit
+</DL>
+<P>For all programs that allow you to enter a key, you may set
+the environment variable <TT>AEFS_ECHO</TT> to <TT>1</TT> to
+have them echo the key you type to the screen; otherwise, user
+input it is not echoed.&nbsp;&nbsp;Also, for programs that allow
+you to enter a key, you may use the environment variable <TT>AEFS_PASSPHRASE</TT>
+to pass the key non-interactively.&nbsp;&nbsp;This is safer than
+using the <TT>--key</TT> option.
+<A NAME="8"></A>
+<H2>2.1 mkaefs</H2>
+
+<P>The <TT>mkaefs</TT> program creates an AEFS file system.&nbsp;&nbsp;The
+syntax is:
+<P><TT>mkaefs </TT><I>option</I><TT>* </TT><I>path</I>
+<P>The options are:
+<DL COMPACT>
+
+<DT><TT>--key </TT><I>key</I><TT>, -k </TT><I>key</I><DD>Use
+the specified key.&nbsp;&nbsp;If the key is not specified, you
+will be asked to type it in.&nbsp;&nbsp;This is unsafe on most
+multi-user systems, since other users may be able to see the
+command-line arguments of processes started by you (e.g., through
+<TT>ps</TT>).
+<DT><TT>--cipher </TT><I>cipher</I><TT>, -c </TT><I>cipher</I><DD>Use
+the specified block cipher algorithm.&nbsp;&nbsp;This is a specification
+of the form <I>algorithm</I><B>[</B><TT>-</TT><I>keysize</I><B>[</B><TT>-</TT><I>blocksize</I><B>]</B><B>]</B>
+(if you omit the sizes, default values will be used); for example
+<TT>rijndael-128-128</TT> (which happens to be the default).
+ The following algorithms are currently available:
+<DL COMPACT>
+
+<DT><TT>rijndael</TT><DD>Rijndael is the (proposed) Advanced
+Encryption Standard of the US National Institute of Standards
+and Technology -- the successor to DES.&nbsp;&nbsp;It has a 128
+bits block size and supports key sizes of 128, 196, and 256 bits.
+ It's slightly faster (in this implementation) than Twofish when
+a 128 bits key is used, but it's slower for larger key sizes
+(because additional rounds are added).&nbsp;&nbsp;See <TT>http://csrc.nist.gov/encryption/aes/</TT>
+for more information.
+<DT><TT>twofish</TT><DD>Twofish is a very fast block cipher.
+ Its block size is 128 bits.&nbsp;&nbsp;Its supported key sizes
+are 128, 196 and 256 bits.&nbsp;&nbsp;Twofish was a candidate
+for the Advanced Encryption Standard (AES) which made it to the
+final round.&nbsp;&nbsp;See <TT>http://www.counterpane.com/twofish.html</TT>
+for more information.
+<DT><TT>none</TT><DD>This is the identity block cipher.&nbsp;&nbsp;That
+is, the output of the cipher is equal to the input.&nbsp;&nbsp;This
+should only be used for debugging.
+</DL>
+<P>Run <TT>mkaefs</TT> with the <TT>--help</TT> flag to see a
+list of allowed block cipher specifications.
+<DT><TT>--no-cbc</TT><DD>Do not use Cipher Block Chaining (CBC)
+mode (i.e.&nbsp;&nbsp;use Electronic Codebook (ECB) mode).&nbsp;&nbsp;By
+default, CBC is used.&nbsp;&nbsp;This is only useful for debugging
+(in conjunction with <TT>--cipher none</TT>).
+</DL>
+<A NAME="9"></A>
+<H2>2.2 aefsck</H2>
+
+<P>The <TT>aefsck</TT> program checks an AEFS file system for
+errors and optionally repairs them.&nbsp;&nbsp;The syntax is:
+<P><TT>aefsck </TT><I>option</I><TT>* </TT><I>path</I>
+<P>The options are:
+<DL COMPACT>
+
+<DT><TT>--fix, -f</TT><DD>Fix errors.&nbsp;&nbsp;Without this
+flag, <TT>aefsck</TT> only checks for and reports errors.
+<DT><TT>--force-fix</TT><DD>Fix unreadable superblocks.&nbsp;&nbsp;Without
+this flag, <TT>aefsck</TT> will immediately stop fixing the file
+system if it sees that the superblock cannot be decrypted (that
+is, if it has a bad checksum).&nbsp;&nbsp;This usually indicates
+that you specified an invalid key.&nbsp;&nbsp;Proceeding with
+an invalid key will do great damage to the file system, because
+<TT>aefsck</TT> will read much bogus information and then `fix'
+it.&nbsp;&nbsp;If the superblock really is damaged, you can specify
+this flag, but make sure that you enter the right key.&nbsp;&nbsp;Make
+a backup first.&nbsp;&nbsp;<TT>aefsck</TT> will ask for confirmation
+before proceeding.
+<DT><TT>--key </TT><I>key</I><TT>, -k </TT><I>key</I><DD>Use
+the specified key.&nbsp;&nbsp;If the key is not specified, you
+will be asked to type it in.
+<DT><TT>--scan, -s</TT><DD>Perform a `surface scan'.&nbsp;&nbsp;This
+means that <TT>aefsck</TT> will test the decryptability of every
+sector of every file in the file system.&nbsp;&nbsp;If <TT>--fix</TT>
+is specified, it will rewrite sectors with wrong checksums.
+<DT><TT>--quiet, -q</TT><DD>Run silently; only report errors
+and the actions subsequently taken.&nbsp;&nbsp;If this flag is
+not given, then <TT>aefsck</TT> will report the several phases
+that it goes through.
+</DL>
+<P><I>Warning:</I> AEFS has not been tested widely.&nbsp;&nbsp;Since
+<TT>aefsck</TT> traverses the entire file system, if it has a
+bug, it might end up trashing the entire file system.&nbsp;&nbsp;So
+you may want to make a backup first.&nbsp;&nbsp;At the very least
+you should make a backup of the file `ffffffff.enc'; that's the
+file that contains info about all the file objects in the file
+system (in Unix terminology, it's the `i-node' table).
+<A NAME="10"></A>
+<H2>2.3 mntaefs</H2>
+
+<P>The <TT>mntaefs</TT> program attaches an AEFS file system
+to a drive letter.&nbsp;&nbsp;The syntax is:
+<P><TT>mntaefs </TT><I>option</I><TT>* </TT><I>drive-letter</I><TT>: </TT><I>path</I>
+<P>The error code 25 is returned as a general indicator that
+an I/O error occured.
+<P>The options are:
+<DL COMPACT>
+
+<DT><TT>--force, -f</TT><DD>Attach the file system even if its
+dirty flag is set.&nbsp;&nbsp;The fact that it's dirty means
+that it wasn't properly detached the last time you used it, so
+it may have errors.
+<DT><TT>--key </TT><I>key</I><TT>, -k </TT><I>key</I><DD>Use
+the specified key.&nbsp;&nbsp;If the key is not specified, you
+will be asked to type it in.
+<DT><TT>--nocheck, -n</TT><DD>Do not start <TT>aefsck</TT> to
+check the file system if it is dirty.&nbsp;&nbsp;Without this
+flag, when the file system is dirty, <TT>mntaefs</TT> will start
+<TT>aefsck</TT> to fix possible errors and clear the dirty flag
+(unless <TT>--readonly</TT> is specified).&nbsp;&nbsp;If <TT>aefsck</TT>
+indicates that there were no errors or that all errors were fixed,
+<TT>mntaefs</TT> will again attempt to attach the file system.
+<DT><TT>--readonly, -r</TT><DD>Attach the file system read-only.
+ Note that the file system is always attached read-only if the
+read-only flag is set on the superblock file <TT>SUPERBLK.2</TT>.
+<DT><DD>
+</DL>
+<A NAME="11"></A>
+<H2>2.4 umntaefs</H2>
+
+<P>The <TT>umntaefs</TT> program detaches an AEFS file system
+from a drive letter.&nbsp;&nbsp;The syntax is:
+<P><TT>umntaefs </TT><I>option</I><TT>* </TT><I>drive-letter</I><TT>:</TT>
+<P>The options are:
+<DL COMPACT>
+
+<DT><TT>--force, -f</TT><DD>Detach the file system even if there
+are open files, active searches, or current directories for this
+drive.&nbsp;&nbsp;This might not be entirely safe.
+</DL>
+<A NAME="12"></A>
+<H2>2.5 aefsdump</H2>
+
+<P>The <TT>aefsdump</TT> program decrypts one or more encrypted
+storage files of an AEFS file system and writes the decrypted
+data to standard output.&nbsp;&nbsp;The syntax is:
+<P><TT>aefsdump </TT><I>option</I><TT>* </TT><I>file</I><I>*</I>
+<P><I>file</I> may be <TT>-</TT> to specify standard input.&nbsp;&nbsp;<I>Note:</I>
+in that case, you must use <TT>--key</TT>, because otherwise
+the key will also be read from standard input.
+<P>The options are:
+<DL COMPACT>
+
+<DT><TT>--key </TT><I>key</I><TT>, -k </TT><I>key</I><DD>Use
+the specified key.&nbsp;&nbsp;If the key is not specified, you
+will be asked to type it in.
+<DT><TT>--cipher </TT><I>cipher</I><TT>, -c </TT><I>cipher</I><DD>Use
+the specified block cipher algorithm.&nbsp;&nbsp;This should
+of course be the same as the cipher specified to <TT>mkaefs</TT>
+when the file system was created.&nbsp;&nbsp;See the documentation
+for <TT>mkaefs</TT> for more information.
+<DT><TT>--no-cbc</TT><DD>Do not use CBC mode.&nbsp;&nbsp;This
+should only be used if this flag was also specified to <TT>mkaefs</TT>
+when the file system was created.
+</DL>
+<A NAME="13"></A>
+<H2>2.6 aefsdmn and aefsparm</H2>
+
+<P>The <TT>aefsdmn</TT> program is the file system daemon.&nbsp;&nbsp;The
+syntax is:
+<P><TT>aefsdmn </TT><I>option</I><I>*</I>
+<P>It is typically started in <TT>CONFIG.SYS</TT> by a <TT>RUN</TT>
+statement (<I>not</I> a <TT>CALL</TT> statement) or from a script
+using the <TT>detach</TT> command.
+<P>You can change the options of a running daemon with <TT>aefsparm</TT>.
+ The syntax is the same.&nbsp;&nbsp;The parameters given to <TT>aefsparm</TT>
+are sent verbatim to the daemon.&nbsp;&nbsp;Error messages are
+send to the syslog service (if you have it running).
+<P>The options are:
+<DL COMPACT>
+
+<DT><TT>--debug</TT><DD>Write debug messages to syslog.&nbsp;&nbsp;This
+makes the daemon slow.
+<DT><TT>--cache </TT><I>n</I><DD>Set the maximum size of the
+cache per volume in 512-byte units.&nbsp;&nbsp;The default is
+4096, or 2 megabytes per volume.
+<DT><TT>--storagefiles </TT><I>n</I><DD>Set the maximum number
+of open storage files per volume.&nbsp;&nbsp;To speed up access
+to the encrypted files AEFS keeps the most recently used ones
+open.&nbsp;&nbsp;The default is 16.&nbsp;&nbsp;This number should
+not be made too high; otherwise the daemon might run into the
+open file limit of the C runtime library (use <TT>emxbind -a aefsdmn.exe -h</TT><I>limit</I>
+to change this).
+<DT><TT>--files </TT><I>n</I><DD>Set the maximum number of files
+for which AEFS may cache sectors.&nbsp;&nbsp;Every file in the
+cache has a slight overhead; hence the limit.&nbsp;&nbsp;The
+default is 4096 files.
+<DT><TT>--lastaccess=</TT><B>[</B><TT>active</TT><B>|</B><TT>lazy</TT><B>]</B><DD>Specify
+whether the last-accessed fields of files should be updated always
+(`active') or only if other fields have changed as well (`lazy').
+ The default is `active'.
+<DT><TT>--lazy=</TT><B>[</B><TT>on</TT><B>|</B><TT>off</TT><B>]</B><DD>Specify
+whether lazy-writing (or `write-behind') should be enabled.&nbsp;&nbsp;The
+default is `on'.&nbsp;&nbsp;If lazy-writing is enabled, AEFS
+will flush every volume every 5 seconds.&nbsp;&nbsp;This interval
+cannot currently be changed.
+<DT><TT>--quit</TT><DD>Kill the daemon.&nbsp;&nbsp;Useful for
+debugging.&nbsp;&nbsp;You should detach all attached volumes
+first.
+<DT><TT>--info</TT><DD>Print statistics about the memory allocation
+of the daemon and about every attached volume.&nbsp;&nbsp;These
+appear in the log file.
+</DL>
+<P>Note: most options do not take effect for volumes that are
+already attached, only for volumes attached after <TT>aefsparm</TT>
+is run.
+<A NAME="14"></A>
+<H1>3 Known problems and limitations</H1>
+
+<A NAME="15"></A>
+<H2>3.1 General problems</H2>
+
+<UL>
+
+<LI>
+It is not possible to mount an AEFS volume stored on an AEFS
+volume.&nbsp;&nbsp;This is because the daemon can handle only
+one request at a time, and a deadlock would occur if the daemon
+tried to access an AEFS volume.&nbsp;&nbsp;However, this deadlock
+condition <I>is</I> detected and prevented.
+<LI>
+The scheme for flushing out dirty sectors is rather bad.&nbsp;&nbsp;If
+the cache is full and space is needed, all dirty sectors are
+flushed to disk at once.&nbsp;&nbsp;This can cause high delay
+(due to the one-request-at-a-time nature of the daemon), especially
+if the ciphertext is stored on a slow medium such as a network
+drive.
+<P>In fact, until somebody implements a better write-behind scheme,
+you might be better off with lazy-writing turned off (the <TT>--lazy=off</TT>
+option of <TT>aefsdmn</TT>).
+<LI>
+AEFS doesn't handle system shutdown very well (actually, this
+an OS/2 problem: at the time the kernel tells AEFS to flush all
+data, it will no longer pass any read or write operations to
+any file system; so we can't write dirty data to the underlying
+file systems).&nbsp;&nbsp;If there still is dirty data in the
+cache when the system is shut down, it may not be committed to
+disk, causing data loss (run <TT>aefsck</TT> when this happens).
+ The surest way to prevent this is to detach (<TT>umntaefs</TT>)
+each volume before shutting down the system.
+<LI>
+The file `ffffffff.enc' (the `i-node' table) grows if necessary,
+but it never shrinks.&nbsp;&nbsp;It would be nice if <TT>aefsck</TT>
+had an option to do that.
+</UL>
+<A NAME="16"></A>
+<H2>3.2 Security problems</H2>
+
+<UL>
+
+<LI>
+The most obvious exposure is the size of the files on the volume,
+since encryption happens on a per file basis.
+<LI>
+Data is encrypted in independent blocks (`sectors') of 512 bytes.
+ Thus, it is possible for somebody with access to the ciphertext
+to gain information about the volume's modification patterns
+by monitoring which files and which sectors are being changed.
+<P>Also, a last-accessed field is maintained for every file (just
+like HPFS does).&nbsp;&nbsp;This can give an attacker information
+about the volume's access patterns (because the sector containing
+the field changed).&nbsp;&nbsp;Start <TT>aefsdmn</TT> with the
+option <TT>--lastaccess=lazy</TT> to have it update the last-accessed
+field only if other fields have changed as well.
+<P>On the other hand, since AEFS encrypts in Cipher Block Chaining
+(CBC) mode with a pseudo-random Initialization Vector, it is
+not possible for an attacker to see <I>which</I> bytes in a sector
+were changed.
+<LI>
+Sensitive data may be swapped out to the swap file.&nbsp;&nbsp;The
+daemon should lock all buffers containing sensitive data in physical
+memory.&nbsp;&nbsp;OS/2 applications cannot actually do this,
+but it should be possible with a little help from the FSD.&nbsp;&nbsp;However,
+the fact that any data may be leaked to the swap file is a fundamental
+limitation of a non-secure operating system like OS/2.&nbsp;&nbsp;The
+only protection is to completely disable swapping (`<TT>MEMMAN=NOSWAP</TT>'
+in CONFIG.SYS).
+<LI>
+The Workplace Shell stores lots of information about the files
+and directories it encounters in <TT>OS2.INI</TT> and <TT>OS2SYS.INI</TT>.
+ For example, it tends to assign a handle to every file it sees
+and store it in the <TT>HANDLES</TT> entry of <TT>OS2SYS.INI</TT>.
+ You can prevent this by not using the WPS to access the encrypted
+drive.
+<LI>
+Other programs are similarly indiscreet with data.&nbsp;&nbsp;For
+example.&nbsp;&nbsp;many applications maintain a history of most
+recently opened files, or write possibly sensitive data to temporary
+directories.
+<LI>
+``It doesn't matter what the algorithms are or how large the
+keys they use; user-remembered secrets are not secure.'' (Bruce
+Schneier, CRYPTO-GRAM, October 15, 1999).&nbsp;&nbsp;AEFS relies
+on user-remembered keys to protect the data: this places a limit
+on the security of the system.
+<P>AEFS should have an option to generate a (cryptographically)
+strong pseudo-random key to be encrypted by a user-entered pass
+phrase (like PGP does).&nbsp;&nbsp;That way, only the file containing
+the encrypted key is vulnerable to a key guessing attack.
+<LI>
+AEFS should support a slow-but-reliable cipher like 3DES; Twofish
+and Rijndael are too new for one to be really sure of their security
+(although they have had some public scrutiny as part of the AES
+selection process).
+</UL>
+<A NAME="17"></A>
+<H1>4 Building AEFS</H1>
+
+<P>The makefiles require GNU make.
+<P>To build the FSD (<TT>stubfsd.ifs</TT>) you need Microsoft
+C 6.00.&nbsp;&nbsp;This compiler can be downloaded from the IBM
+Developer Connection Device Driver Kit for OS/2 site at <TT>http://service.boulder.ibm.com/ddk</TT>.
+ You also need the FSD helper library and header file, which
+is included in the FSD toolkit: <TT>ftp://ftp.leo.org/pub/comp/os/os2/leo/devtools/doc/ifsinf.zip</TT>.
+<P>To build the daemon and the support programs you need gcc
+or pgcc, available from various locations.
+<P>To regenerate the RPC code for the NFS server, you need a
+<TT>rpcgen</TT> that supports the <TT>-C</TT> flag to generate
+ANSI C header files.&nbsp;&nbsp;I used the one from FreeBSD,
+which compiles trivially under OS/2.
+<A NAME="18"></A>
+<H1>5 Compiling and using the NFS server</H1>
+
+<P>You can now use AEFS under different operating systems than
+OS/2.&nbsp;&nbsp;The program <TT>aefsnfsd</TT> acts as an NFS
+frontend to your AEFS file systems.&nbsp;&nbsp;I'm too lazy to
+write proper documentation right now, but here is a summary of
+how you can get it to work.
+<P>Compile AEFS along the usual lines (i.e.&nbsp;&nbsp;<TT>./configure; make; make install</TT>).
+<P>Then, as root, start the server:
+<BLOCKQUOTE>
+<PRE>
+&nbsp;&nbsp;$ aefsdmn 
+</PRE>
+</BLOCKQUOTE>
+<P>The daemon should disappear into to background.&nbsp;&nbsp;Error
+messages should appear in your system log.&nbsp;&nbsp;Specify
+<TT>-d</TT> to get debug output on stdout in case something goes
+wrong.&nbsp;&nbsp;The daemon listens to TCP and UDP requests
+on the loopback interface on port 843, and not port 2049, which
+is the usual port for NFS.&nbsp;&nbsp;This is because 2049 is
+not a privileged port, so any user could bind to it and intercept
+your keys, and because this way the daemon doesn't interfere
+with your regular NFS server.&nbsp;&nbsp;It doesn't register
+itself with portmap unless you specify the <TT>-r</TT> flag.
+ The daemon can be cleanly shut down by sending it a TERM or
+INT signal.
+<P>Since the NFS protocol doesn't know anything about encryption
+keys, another protocol is used to give those keys to the daemon.
+ This is what the <TT>aefsadd</TT> program does.&nbsp;&nbsp;For
+example, to tell it the key for the AEFS file system stored in
+<TT>/crypted/foo</TT>, do:
+<BLOCKQUOTE>
+<PRE>
+&nbsp;&nbsp;$ aefsadd /crypted/foo
+&nbsp;&nbsp;key: blah blah... 
+</PRE>
+</BLOCKQUOTE>
+<P>See <TT>aefsadd --help</TT> for more details.
+<P>Now that the daemon knows the key, you can mount the file
+system:
+<BLOCKQUOTE>
+<PRE>
+&nbsp;&nbsp;$ mount -t nfs -o port=843,mountport=843 localhost:/crypted/foo /mnt/foo
+</PRE>
+</BLOCKQUOTE>
+<P>which will make the decrypted file system appear on <TT>/mnt/foo</TT>.
+ The options to specify the server port are for Linux; they might
+be different for other systems.&nbsp;&nbsp;In fact, IRIX 5.3
+doesn't allow this at all; in such a case recompile with the
+port number set to 2049 (see <TT>nfsd/aefsctrl.h</TT>).
+<P>File names in the same directory that differ only in case
+are not allowed; must fix this.
+<P>Symbolic links are fully supported.&nbsp;&nbsp;Hard links
+work in principle, but are currently disabled in the NFS server
+due to bogosity issues with the readdir call (that's the part
+of NFSv2 that's most broken).
+<P>Unix permissions (UID, GID, etc.) are fully supported.&nbsp;&nbsp;You
+cannot make device nodes, fifos, or sockets on an AEFS volume.
+<P>Make sure that NFS-mounted file systems are unmounted <I>before</I>
+the daemon is killed in your shutdown sequence.&nbsp;&nbsp;Otherwise,
+the shutdown may hang (this is because the client might retry
+requests indefinitely; to prevent this, do a soft mount, <TT>-o soft</TT>).
+<A NAME="19"></A>
+<H1>6 License</H1>
+
+<P>AEFS is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published
+by the Free Software Foundation; either version 2, or (at your
+option) any later version.
+<P>AEFS is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.&nbsp;&nbsp;See the GNU General
+Public License for more details.
+<P>You should have received a copy of the GNU General Public
+License along with AEFS; see the file COPYING.&nbsp;&nbsp;If
+not, write to the Free Software Foundation, 59 Temple Place -
+Suite 330, Boston, MA 02111-1307, USA.
+<P>The Twofish and Rijndael code was written by Dr Brian Gladman
+(gladman@seven77.demon.co.uk) who gave it the following license:
+<BLOCKQUOTE>
+<P>Copyright in this implementation is held by Dr B R Gladman
+but I hereby give permission for its free direct or derivative
+use subject to acknowledgment of its origin and compliance with
+any conditions that the originators of the algorithm place on
+its exploitation.
+</BLOCKQUOTE>
+<P>The use or export of this software may be restricted by law.
+ Before you do either make sure that you know what is allowed
+in your country.
+<A NAME="20"></A>
+<H1>7 Author</H1>
+
+<P>This software was written by Eelco Dolstra.&nbsp;&nbsp;Send
+bug reports, patches, or other comments to <TT>&lt;eelco@cs.uu.nl&gt;</TT>.
+<P>$Id$
+</BODY></HTML>
