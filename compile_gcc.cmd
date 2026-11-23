@@ -13,53 +13,53 @@ set UNIXROOT=C:
 set C_INCLUDE_PATH=C:/usr/include;C:/os2tk45/h
 set LIBRARY_PATH=C:/usr/lib
 if "%1"=="clean" goto clean
-set INCS=-Icorefs -Iciphers -Imisc -Iifsdriver -Isystem -Isystem/os2 -Iutils -Iifsdaemon -I.
+set INCS=-Isrc/corefs -Isrc/ciphers -Isrc/misc -Isrc/ifsdriver -Isrc/system -Isrc/system/os2 -Isrc/utils -Isrc/ifsdaemon -Isrc
 set DEFS=-DSYSTEM_os2 -DHAVE_CONFIG_H
 set CF=-Zomf -Zmt -O2 -Wall -Wno-parentheses %INCS% %DEFS%
 if not exist bin md bin
 if exist bin\obj del bin\obj\*.obj < nul
 if not exist bin\obj md bin\obj
 echo ==== compile > compile.log
-gcc %CF% -c -o bin\obj\getopt.obj misc/getopt.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\getopt1.obj misc/getopt1.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\missing.obj misc/missing.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\logging.obj misc/logging.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\os2.obj system/os2/os2.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\cipher.obj ciphers/cipher.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\ciphertable.obj ciphers/ciphertable.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\identity.obj ciphers/identity.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\rijndael.obj ciphers/rijndael.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\sha.obj ciphers/sha.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\twofish.obj ciphers/twofish.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\basefile.obj corefs/basefile.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\comparators.obj corefs/comparators.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\coreutils.obj corefs/coreutils.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\directory.obj corefs/directory.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\ea.obj corefs/ea.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\infosector.obj corefs/infosector.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\sector.obj corefs/sector.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\storage.obj corefs/storage.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\superblock.obj corefs/superblock.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\symlink.obj corefs/symlink.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\utilutils.obj utils/utilutils.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\aefsdmn.obj ifsdaemon/aefsdmn.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\attach.obj ifsdaemon/attach.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\find.obj ifsdaemon/find.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\misc.obj ifsdaemon/misc.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\dir.obj ifsdaemon/dir.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\openclose.obj ifsdaemon/openclose.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\fileio.obj ifsdaemon/fileio.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\fileinfo.obj ifsdaemon/fileinfo.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\fileop.obj ifsdaemon/fileop.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\d_ea.obj ifsdaemon/ea.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\utils.obj ifsdaemon/utils.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\mkaefs.obj utils/mkaefs.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\aefsck.obj utils/aefsck.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\aefsdump.obj utils/aefsdump.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\aefsutil.obj utils/aefsutil.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\aefsparm.obj ifsutils/aefsparm.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\mntaefs.obj ifsutils/mntaefs.c >> compile.log 2>&1
-gcc %CF% -c -o bin\obj\umntaefs.obj ifsutils/umntaefs.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\getopt.obj src/misc/getopt.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\getopt1.obj src/misc/getopt1.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\missing.obj src/misc/missing.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\logging.obj src/misc/logging.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\os2.obj src/system/os2/os2.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\cipher.obj src/ciphers/cipher.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\ciphertable.obj src/ciphers/ciphertable.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\identity.obj src/ciphers/identity.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\rijndael.obj src/ciphers/rijndael.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\sha.obj src/ciphers/sha.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\twofish.obj src/ciphers/twofish.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\basefile.obj src/corefs/basefile.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\comparators.obj src/corefs/comparators.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\coreutils.obj src/corefs/coreutils.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\directory.obj src/corefs/directory.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\ea.obj src/corefs/ea.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\infosector.obj src/corefs/infosector.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\sector.obj src/corefs/sector.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\storage.obj src/corefs/storage.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\superblock.obj src/corefs/superblock.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\symlink.obj src/corefs/symlink.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\utilutils.obj src/utils/utilutils.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\aefsdmn.obj src/ifsdaemon/aefsdmn.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\attach.obj src/ifsdaemon/attach.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\find.obj src/ifsdaemon/find.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\misc.obj src/ifsdaemon/misc.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\dir.obj src/ifsdaemon/dir.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\openclose.obj src/ifsdaemon/openclose.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\fileio.obj src/ifsdaemon/fileio.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\fileinfo.obj src/ifsdaemon/fileinfo.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\fileop.obj src/ifsdaemon/fileop.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\d_ea.obj src/ifsdaemon/ea.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\utils.obj src/ifsdaemon/utils.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\mkaefs.obj src/utils/mkaefs.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\aefsck.obj src/utils/aefsck.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\aefsdump.obj src/utils/aefsdump.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\aefsutil.obj src/utils/aefsutil.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\aefsparm.obj ifssrc/utils/aefsparm.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\mntaefs.obj ifssrc/utils/mntaefs.c >> compile.log 2>&1
+gcc %CF% -c -o bin\obj\umntaefs.obj ifssrc/utils/umntaefs.c >> compile.log 2>&1
 echo ==== link >> compile.log
 set LIBS=bin\obj\getopt.obj bin\obj\getopt1.obj bin\obj\missing.obj bin\obj\logging.obj bin\obj\os2.obj bin\obj\cipher.obj bin\obj\ciphertable.obj bin\obj\identity.obj bin\obj\rijndael.obj bin\obj\sha.obj bin\obj\twofish.obj bin\obj\basefile.obj bin\obj\comparators.obj bin\obj\coreutils.obj bin\obj\directory.obj bin\obj\ea.obj bin\obj\infosector.obj bin\obj\sector.obj bin\obj\storage.obj bin\obj\superblock.obj bin\obj\symlink.obj
 gcc -Zomf -Zmt -o bin\aefsdmn.exe bin\obj\aefsdmn.obj bin\obj\attach.obj bin\obj\find.obj bin\obj\misc.obj bin\obj\dir.obj bin\obj\openclose.obj bin\obj\fileio.obj bin\obj\fileinfo.obj bin\obj\fileop.obj bin\obj\d_ea.obj bin\obj\utils.obj %LIBS% -lsyslog >> compile.log 2>&1

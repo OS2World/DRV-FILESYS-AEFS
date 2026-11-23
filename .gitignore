@@ -3,7 +3,6 @@
 *.a
 *~
 /Makefile.conf
-/config.h
 /config.h.in
 /config.status
 /config.log
